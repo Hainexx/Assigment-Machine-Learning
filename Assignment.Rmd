@@ -1,0 +1,149 @@
+---
+title: 'Peer-graded Assignment: Prediction Assignment Writeup'
+author: "Gaspare Mattarella"
+date: "9/5/2020"
+output: 
+  html_document: 
+    df_print: tibble
+    fig_caption: yes
+    keep_md: yes
+    toc: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, 
+                      cache = FALSE,
+                      warning = FALSE,
+                      error = FALSE
+                      )
+```
+
+## Introduction
+This report is prepared as one of the requirement in Practical Machine Learning online course by Johns Hopkins University. The basic goal of this assignment is to predict the manner of the subject (6 participants) performed some exercise. For this assignment, in order to predict the manner of the subject did the exercise decision tree and random forest method will be performed to determine the best prediction. The best prediction is determined by the highest accuracy.
+
+## Background
+Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement ??? a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, your goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. More information is available from the website here
+
+## Pre-processing
+This segment includes packages required and uploading data into r.
+
+Packages needed to perform tree classification, bagging, random forest are as follows:
+
+```{r, echo=TRUE, include=TRUE}
+library(caret)
+library(readr)
+library(RColorBrewer)
+library(RGtk2)
+library(rpart)
+library(rpart.plot)
+library(rattle)
+library(randomForest)
+library(gbm)
+```
+```{r fdfgr,include=FALSE}
+testing_pml <- read_csv("./pml-testing.csv")
+training_pml <- read_csv("./pml-training.csv")
+```
+
+## Data Cleaning
+
+Many columns of the data set contain the same value accros the lines. These “near-zero variance predictors”" bring almost no information to our model and will make computing unnecessarily longer. Others are entirely filled with NA values. Finnaly, the six first variables do not concern fitness motions whatsoever. They also need to be remove before we start fitting our model.
+Note that 93 features out of 160 contain missing values, and each of these features contains 9407 missing values out of 9619 observations, i.e. these features have approximately 97.8% of missing values. Given this abundance of missing values we have decided to not consider these features in our analysis.
+```{r pressure, echo=TRUE}
+w <- sapply(training_pml,function(x) mean(is.na(x)) > 0.95) 
+b <- sapply(testing_pml,function(x) mean(is.na(x)) > 0.95)
+
+training_pml <- training_pml[,w == F]
+testing_pml <- testing_pml[,w == F]
+```
+
+In order to keep consistency, we apply the exact same pre-processing to the testing
+```{r hgv, echo=FALSE}
+non_zero_var <- nearZeroVar(training_pml)
+non_zero_var_test <- nearZeroVar(testing_pml)
+
+training_pml <- training_pml[,-non_zero_var]
+testing_pml <- testing_pml[,-non_zero_var_test]
+```
+
+We will mostly focus on the training data set while building our models; we will use the testing set for cross-validation
+```{r gf, echo=TRUE}
+inTrain <- createDataPartition(y= training_pml$classe, p = .65, list =F)
+train <- training_pml[inTrain,]
+test <- training_pml[-inTrain,]
+```
+Furthermore, the first feature is simply the unique sequential number of the observation, which seems irrelevant for predicting the quality of exercise. The sixth feature new_window represents a new time window for sliding window feature extraction, and it is highly skewed with 9419 “no”s out of 9619 observations (i.e. 98% “no”s), so we have also decided to discard it from our models. 
+```{r j, echo=TRUE}
+train <- train[-c(1:7)]
+test <- test[-c(1:7)]
+```
+This concludes the feature selection of our data.
+
+## Prediction model
+Since we want to predict the class (A, B, C, D, E) to which an observation belongs, this is a classification problem with multiple classes. Therefore, there are several models we can use here. We have chosen the following:
+
+1. Tree Classification.
+
+2. Bagging.
+
+3. Random forest model.
+
+The first model we're goning to fit is a simple Tree Classification:
+
+```{r ftn }
+tree <- train(factor(classe)~ ., method= "rpart", data = train,
+              metric = "Accuracy", 
+                              preProcess=c("center", "scale"),
+                              trControl=trainControl(method = "cv"
+                                                       , number = 4
+                                                       , p= 0.60
+                                                       , allowParallel = TRUE))
+tree
+fancyRpartPlot(tree$finalModel)
+```
+As we can see the accuracy is the model is just 51% which makes evident this is not a proper model to fit this kind of data.
+
+The next models we're going to fit are the "bagging" and the random forest, which, according to my previsons will be way much better models in evaluate our model.
+
+```{r ftnc }
+
+baggi <- train(factor(classe)~ ., method= "treebag", data = train,
+              metric = "Accuracy", 
+                              preProcess=c("center", "scale"),
+                              trControl=trainControl(method = "cv"
+                                                       , number = 4
+                                                       , p= 0.60
+                                                       , allowParallel = TRUE))
+baggi
+
+bag_pred <- predict(baggi, test)
+confusionMatrix(bag_pred,factor(test$classe))
+```
+
+
+```{r bu, echo=TRUE}
+
+Random_Forest <- randomForest(factor(classe) ~ .,
+                              data = train,
+                              ntree=100
+                              , metric = "Accuracy" 
+                              , preProcess=c("center", "scale")
+                              , trControl=trainControl(method = "cv"
+                                                       , number = 4
+                                                       , p= 0.60
+                                                       , allowParallel = TRUE))
+
+```
+
+Both the models show much higher degrees of accuracy in the cross validation tests, both close to $100\%$. 
+```{r d, echo=TRUE}
+plot(Random_Forest)
+
+rf_pred <- predict(Random_Forest, test)
+confusionMatrix(rf_pred,factor(test$classe))
+```
+## Testing the model
+
+Our out-of-sample accuracy is 0.9952, so our out-of-sample error is 0.0048. Moreover, both specificity and sensitivity are quite high for all classes, therefore our model seems to be performing very well in new data.
+
+
