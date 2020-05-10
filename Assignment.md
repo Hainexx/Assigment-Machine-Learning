@@ -240,7 +240,7 @@ confusionMatrix(bag_pred,factor(test$classe))
 ## Detection Prevalence   0.2861   0.1918   0.1748   0.1640   0.1832
 ## Balanced Accuracy      0.9967   0.9870   0.9901   0.9946   0.9965
 ```
-
+The baggin model show much higher degrees of accuracy in the cross validation tests with an in-sample 0.989% of accuracy.
 
 
 ```r
@@ -254,8 +254,6 @@ Random_Forest <- randomForest(factor(classe) ~ .,
                                                        , p= 0.60
                                                        , allowParallel = TRUE))
 ```
-
-Both the models show much higher degrees of accuracy in the cross validation tests, both close to $100\%$. 
 
 ```r
 plot(Random_Forest)
@@ -302,6 +300,9 @@ confusionMatrix(rf_pred,factor(test$classe))
 ## Detection Prevalence   0.2846   0.1934   0.1754   0.1626   0.1840
 ## Balanced Accuracy      0.9995   0.9967   0.9953   0.9949   0.9999
 ```
+The RF performs even better with a 0.9961% of accuracy.
+
+Finally I0m going to cross validate this in our test data set to calculate the out-of-sample error rate, which I expect it to be a little bit higher. 
 ## Testing the model
 
 Our out-of-sample accuracy is 0.9952, so our out-of-sample error is 0.0048. Moreover, both specificity and sensitivity are quite high for all classes, therefore our model seems to be performing very well in new data.
