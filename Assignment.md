@@ -261,7 +261,7 @@ Both the models show much higher degrees of accuracy in the cross validation tes
 plot(Random_Forest)
 ```
 
-![](Assignment_files/figure-html/d-1.png)<!-- -->
+![](d-1.png)<!-- -->
 
 ```r
 rf_pred <- predict(Random_Forest, test)
