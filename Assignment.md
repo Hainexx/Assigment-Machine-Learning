@@ -168,7 +168,7 @@ tree
 fancyRpartPlot(tree$finalModel)
 ```
 
-![](Assigment-Machine-Learning/ftn-1.png)<!-- -->
+![](ftn-1.png)<!-- -->
 As we can see the accuracy is the model is just 51% which makes evident this is not a proper model to fit this kind of data.
 
 The next models we're going to fit are the "bagging" and the random forest, which, according to my previsons will be way much better models in evaluate our model.
