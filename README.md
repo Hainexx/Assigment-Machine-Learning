@@ -1,14 +1,7 @@
----
-title: 'Peer-graded Assignment: Prediction Assignment Writeup'
+
+# Peer-graded Assignment: Prediction Assignment Writeup
 author: "Gaspare Mattarella"
 date: "9/5/2020"
-output: 
-  html_document: 
-    df_print: tibble
-    fig_caption: yes
-    keep_md: yes
-    toc: yes
----
 
 
 
